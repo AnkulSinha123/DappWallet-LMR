@@ -3,13 +3,11 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract MITverse is ERC20 {
+contract LockableToken is ERC20 {
     address public owner;
     uint256 public mitPriceInBinance;
     IERC20 public binanceToken;
-    uint256 public quantity;
-    
-
+    uint256 internal quantity;
 
     uint256 private constant TOTAL_SUPPLY = 100000000 * 10**18; // Total supply of tokens
     mapping(address => uint256) private _lockedBalances30days;
@@ -49,30 +47,31 @@ contract MITverse is ERC20 {
         binanceToken.approve(address(this), price);
         binanceToken.transferFrom(msg.sender, owner, price);
 
-        if(amount<100){
-            uint256 newAmt = amount * 10**18 ;
-        }
-        
-        if(amount>=100 && amount<500){
-            uint256 newAmt = (amount + 10) * 10**18 ;
-            quantity = newAmt;
-        }
-        if(amount>=500 && amount<1000){
-            uint256 newAmt = (amount + 60) * 10**18 ;
-            quantity = newAmt;
-        }
-        if(amount>=1000 && amount<10000){
-            uint256 newAmt = (amount + 150) * 10**18 ;
-            quantity = newAmt;
-        }
-        if(amount>=10000){
-            uint256 newAmt = (amount + 2000) * 10**18 ;
+        if (amount < 100) {
+            uint256 newAmt = amount * 10**18;
             quantity = newAmt;
         }
 
-        uint256 unlockedAmount = (((quantity * 99)/100) * 20) / 100;
-        uint256 locked30DaysAmount = (((quantity * 99)/100) * 30) / 100;
-        uint256 locked6MonthsAmount = (((quantity * 99)/100) * 50) / 100;
+        if (amount >= 100 && amount < 500) {
+            uint256 newAmt = (amount + 10) * 10**18;
+            quantity = newAmt;
+        }
+        if (amount >= 500 && amount < 1000) {
+            uint256 newAmt = (amount + 60) * 10**18;
+            quantity = newAmt;
+        }
+        if (amount >= 1000 && amount < 10000) {
+            uint256 newAmt = (amount + 150) * 10**18;
+            quantity = newAmt;
+        }
+        if (amount >= 10000) {
+            uint256 newAmt = (amount + 2000) * 10**18;
+            quantity = newAmt;
+        }
+
+        uint256 unlockedAmount = (((quantity * 99) / 100) * 20) / 100;
+        uint256 locked30DaysAmount = (((quantity * 99) / 100) * 30) / 100;
+        uint256 locked6MonthsAmount = (((quantity * 99) / 100) * 50) / 100;
 
         // Transfer the purchased tokens to the buyer
         _transfer(owner, msg.sender, unlockedAmount);
@@ -97,13 +96,11 @@ contract MITverse is ERC20 {
         binanceToken.approve(address(this), price);
         binanceToken.transferFrom(msg.sender, owner, price);
 
-        uint256 newAmt = amount * 10**18 ;
-        uint256 TotalAmt = ((newAmt * 99)/100) ;
-    
+        uint256 newAmt = amount * 10**18;
+        uint256 TotalAmt = ((newAmt * 99) / 100);
 
         // Transfer the purchased tokens to the buyer
         _transfer(owner, msg.sender, TotalAmt);
-
     }
 
     function unlockTokens30days() public {
@@ -144,29 +141,15 @@ contract MITverse is ERC20 {
         return _lockedBalances6months[account];
     }
 
-
     function lockStart(address account) public view returns (uint256) {
         return _lockStart[account];
-    }
-
-    function unlockedBalance30days(address account)
-        public
-        view
-        returns (uint256)
-    {
-        return balanceOf(account) - _lockedBalances30days[account];
-    }
-
-    function unlockedBalance6months(address account)
-        public
-        view
-        returns (uint256)
-    {
-        return balanceOf(account) - _lockedBalances6months[account];
     }
 
     function withdrawBNB(uint256 amount) public onlyOwner {
         binanceToken.transfer(owner, amount);
     }
 
+    function mint(address account, uint256 amount) external onlyOwner {
+        _mint(account, amount);
+    }
 }
